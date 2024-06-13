@@ -1,41 +1,25 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+# Tiny Tapeout 8: Simple Stopwatch
 
-- [Read the documentation for project](docs/info.md)
+This is a verilog stopwatch to be realised in a "rideshare" open source ASIC organised by Tiny Tapeout.
+I made a very similar stopwatch as part of an assignment in an FPGA class in VHDL, and wanted to learn verilog and ASIC design by porting it over.
+
+With 3 buttons, a stopwatch with 1/100th second precision can be started and stopped, as well as a lap time kept temporarily.
+
+For more, read the [Tiny Tapeout documentation](docs/info.md)
+
+[SPI Master courtesty of Russell Merrick aka nandland](https://github.com/nandland/spi-master).
+
+## How to use
+
+You will need the Tiny Tapeout 6 PCB/chip. See the [Tiny Tapeout documentation](docs/info.md).
+A minimum of 2 buttons, preferrably 3 are needed.
+This project was designed to display its output via SPI using a MAX7219/MAX7221 driven 7-segment display with 8 digits. If you have something else that can decode that, this should work as well. I will try to add some documentation on this, if I did not, check out the documentation of the MAX chip.
 
 ## What is Tiny Tapeout?
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+TinyTapeout is an educational project that aims to make it easier and cheaper than ever to get your digital designs manufactured on a real chip.
+Each run, one or more tiles can be bought on the overall chip and filled with custom designs.
 
-To learn more and get started, visit https://tinytapeout.com.
-
-## Set up your Verilog project
-
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
-
-The GitHub action will automatically build the ASIC files using [OpenLane](https://www.zerotoasiccourse.com/terminology/openlane/).
-
-## Enable GitHub actions to build the results page
-
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
-
-## Resources
-
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
-
-## What next?
-
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
+To learn more and get started yourself, visit https://tinytapeout.com and/or [Join the community](https://tinytapeout.com/discord).
