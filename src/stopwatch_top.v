@@ -76,15 +76,16 @@ module tt_um_faramire_stopwatch (
     .clk_div(dividedClock),
     .res (rst_n),
     .ena (display_enable),
+    .skip_setup (ui_in[3]),
     .min_X0 (w_min_X0),
     .min_0X (w_min_0X),
     .sec_X0 (w_sec_X0),
     .sec_0X (w_sec_0X),
     .ces_X0 (w_ces_X0),
     .ces_0X (w_ces_0X),
-    .Mosi    (uo_out[0]), // MOSI on out 0
-    .Cs      (uo_out[1]), //  CS  on out 1
-    .Clk_SPI (uo_out[2])  //  CLK on out 3
+    .Mosi (uo_out[0]), // MOSI on out 0
+    .Cs   (uo_out[1]), //  CS  on out 1
+    .Sclk (uo_out[2])  //  CLK on out 3
   );
 
 endmodule // tt_um_faramire_stopwatch

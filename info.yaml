@@ -24,7 +24,7 @@ pinout:
   ui[0]: "start/stop"
   ui[1]: "lap time"
   ui[2]: "reset (active high)"
-  ui[3]: ""
+  ui[3]: "skip display setup (only output time, active high during reset)"
   ui[4]: ""
   ui[5]: ""
   ui[6]: ""

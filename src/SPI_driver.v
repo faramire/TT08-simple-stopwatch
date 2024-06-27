@@ -11,7 +11,7 @@ module SPI_driver (
   input wire res, // reset, active low
   input wire ena,
 
-  input wire skip_setup; // high => do not send setup packages
+  input wire skip_setup, // high => do not send setup packages
 
   input wire [2:0] min_X0, // minutes
   input wire [3:0] min_0X,
@@ -20,7 +20,7 @@ module SPI_driver (
   input wire [3:0] ces_X0, // centiseconds (100th)
   input wire [3:0] ces_0X,
 
-  output reg  Cs,
+  output wire  Cs,
   output wire Sclk,
   output wire Mosi
 );
@@ -201,29 +201,18 @@ module SPI_driver (
             default:digit_count <= 3'b000;
           endcase
 
-        end else if (send_reported == 1) begin // once data has been send, pull CS high
-          Cs <= 1;
         end
       end // TRANSFER
 
       WAIT: begin
         if (wait_count == 4'b1111) begin
-          state <= CS_PAUSE;
+          state <= DONE;
           wait_count <= 4'b0;
-          Cs <= 1;
-        end else if (send_reported == 1'b1 || ready_reported) begin
+        end else if (ready_reported) begin
           wait_count <= wait_count + 1'b1;
         end
       end
 
-      CS_PAUSE: begin
-        if (wait_count == 4'b1111) begin
-          state <= TRANSFER;
-          wait_count <= 4'b0;
-        end else begin
-          wait_count <= wait_count + 1'b1;
-        end
-      end
 
       DONE: begin // wait for the 100 Hz clock to go low again
         if (!clk_div) begin
@@ -256,7 +245,7 @@ module SPI_Master (
   input wire [15:0] word_in, // word to be sent
 
   output reg cs,             // Chip Select
-  output reg sclk            // serial clock
+  output reg sclk,            // serial clock
   output reg mosi,           // MOSI
   output reg report_ready    // ready for next transmission
 );
@@ -293,12 +282,13 @@ module SPI_Master (
               count_bit <= 0;
               count_word <= 15;
               word_out <= word_in;
-              state <= TRANSFER;
+              cs <= 0;
+              state <= SEND;
             end
           end 
         end // IDLE
 
-        TRANSFER: begin
+        SEND: begin
           case(count_bit)
 
             2'b00: begin // pull low
@@ -328,7 +318,7 @@ module SPI_Master (
               count_bit <= 2'b00;
 
               if (count_word == 0) begin // end of word? exit
-                state <= DONE;
+                state <= WAIT;
               end else begin
                 count_word <= count_word - 1; // this is here so that once it goes 0, one clock cycle is still executed
               end
@@ -336,9 +326,9 @@ module SPI_Master (
 
             default:;
           endcase
-        end // TRANSFER
+        end // SEND
 
-        DONE: begin // pull everything idle
+        WAIT: begin // pull everything idle
           cs <= 1;
           sclk <= 0;
           mosi <= 0;
