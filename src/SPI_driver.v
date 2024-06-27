@@ -34,7 +34,7 @@ module SPI_driver (
   localparam IDLE      = 3'b100;
   localparam TRANSFER  = 3'b101;
   localparam WAIT      = 3'b110;
-  localparam DONE      = 3'b110;
+  localparam DONE      = 3'b111;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;

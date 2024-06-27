@@ -5,7 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = stopwatch_top.v
+PROJECT_SOURCES = stopwatch_top.v SPI_driver.v
 
 ifneq ($(GATES),yes)
 
