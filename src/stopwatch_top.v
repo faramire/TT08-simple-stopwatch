@@ -4,7 +4,7 @@
  */
 
 `define default_netname none
-`include "SPI_driver.v"
+`include "SPI.v"
 
 module tt_um_faramire_stopwatch (
   input  wire [7:0] ui_in,    // Dedicated inputs
