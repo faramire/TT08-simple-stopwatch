@@ -19,7 +19,10 @@ module tt_um_faramire_stopwatch (
   // All output pins must be assigned. If not used, assign to 0.
   assign uio_out = 0;
   assign uio_oe  = 0;
-  assign uo_out[7:5]  = 0;
+  assign uo_out[7:5] = 0;
+
+  // List all unused inputs to prevent warnings
+  wire _unused = &{ena, ui_in[7:4], uio_in[7:0], 1'b0};
 
   wire dividedClock; // 100 Hz clock
   wire counter_enable;
@@ -88,6 +91,8 @@ module tt_um_faramire_stopwatch (
     .Sclk (uo_out[2])  //  CLK on out 3
   );
 
+
+
 endmodule // tt_um_faramire_stopwatch
 
 module clockDivider (
@@ -126,18 +131,18 @@ module controller (
   output reg  display_enable  //
 );
 
-  always @(posedge start_stop) begin
+  always @(posedge clk) begin
     if (!res) begin
       counter_enable <= 1'b0;
-    end else begin
+    end else if(start_stop) begin
       counter_enable <= ~counter_enable;
     end
   end
 
-  always @(posedge lap_time) begin
+  always @(posedge clk) begin
     if (!res) begin
       display_enable <= 1'b1;
-    end else begin
+    end else if (lap_time) begin
         display_enable <= ~display_enable;
     end
   end
@@ -154,7 +159,7 @@ module counter6 (
 
 parameter max_count = 6;
 
-  always @(posedge clk  or negedge res) begin
+  always @(posedge clk) begin
     if (!res) begin
       cnt <= 3'b0;
       max <= 1'b0;
@@ -185,7 +190,7 @@ module counter10 (
 
   parameter max_count = 10;
 
-  always @(posedge clk or negedge res) begin
+  always @(posedge clk) begin
     if (!res) begin
       cnt <= 4'b0;
       max <= 1'b0;

@@ -26,15 +26,16 @@ module SPI_driver (
 );
 
   // FSM
-  reg [2:0] state;
-  localparam SETUP_PWR = 3'b000;
-  localparam SETUP_LUX = 3'b001;
-  localparam SETUP_SCN = 3'b010;
-  localparam SETUP_BCD = 3'b011;
-  localparam IDLE      = 3'b100;
-  localparam TRANSFER  = 3'b101;
-  localparam WAIT      = 3'b110;
-  localparam DONE      = 3'b111;
+  reg [3:0] state;
+  localparam SETUP_TST = 4'b0000;
+  localparam SETUP_SCN = 4'b0001;
+  localparam SETUP_LUX = 4'b0010;
+  localparam SETUP_BCD = 4'b0011;
+  localparam SETUP_PWR = 4'b0100;
+  localparam IDLE      = 4'b0101;
+  localparam TRANSFER  = 4'b0110;
+  localparam WAIT      = 4'b0111;
+  localparam DONE      = 4'b1000;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
@@ -42,10 +43,11 @@ module SPI_driver (
   wire ready_reported; // master module reports that it is ready to transmit the next word
   reg reset_master; // reset the master module
   reg send_order; // orders the master module to send a word via SPI
-  reg sent_PWR; // flags to track setup state
-  reg sent_LUX;
+  reg sent_TST; // flags to track setup states
   reg sent_SCN;
+  reg sent_LUX;
   reg sent_BCD;
+  reg sent_PWR;
 
   always @(posedge clk) begin  // controlling FSM
     if (!res) begin // active low reset
@@ -53,39 +55,54 @@ module SPI_driver (
       send_order <= 0;
       word_out <= 16'b0;
       digit_count <= 3'b0;
-      sent_PWR <= 0;
-      sent_LUX <= 0;
+      sent_TST <= 0;
       sent_SCN <= 0;
+      sent_LUX <= 0;
       sent_BCD <= 0;
+      sent_PWR <= 0;
       if (skip_setup) begin
         state <= IDLE;
       end else begin
-        state <= SETUP_PWR;
+        state <= SETUP_TST;
       end
     end
 
     case(state)
 
-      SETUP_PWR: begin // send a setup packet to leave shutdown mode
+      SETUP_TST: begin // disable test mode
         if (res) begin
           reset_master <= 1;
-          if (!sent_PWR) begin
+          if (!sent_TST) begin
             if (ready_reported) begin
-              word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
+              word_out <= 16'b0000_1111_0000_0000; // address = test mode, data = disable (normal mode)
               send_order <= 1;
-              sent_PWR <= 1;
+              sent_TST <= 1;
             end
-          end
-          else begin
+          end else begin
             send_order <= 0;
             if (ready_reported) begin
-              state <= SETUP_LUX;
+              state <= SETUP_SCN;
             end
           end
         end
-      end // SETUP_PWR
+      end // SETUP_TST
 
-      SETUP_LUX: begin
+      SETUP_SCN: begin // send a setup packet enabling 6 digits
+        if (!sent_SCN) begin
+          if (ready_reported) begin
+            word_out <= 16'b0000_1011_0000_0101; // address = scan limit, data = scan digits 0-5
+            send_order <= 1;
+            sent_SCN <= 1;
+          end
+        end else begin
+          send_order <= 0;
+          if (ready_reported) begin
+            state <= SETUP_LUX;
+          end
+        end
+      end // SETUP_SCN
+
+      SETUP_LUX: begin // set intensity (brightness)
         if (!sent_LUX) begin
           if (ready_reported) begin
             word_out <= 16'b0000_1010_0000_0101; // address = intensity, data = 11/32
@@ -96,31 +113,15 @@ module SPI_driver (
         else begin
           send_order <= 0;
           if (ready_reported) begin
-            state <= SETUP_SCN;
-          end
-        end
-      end
-
-      SETUP_SCN: begin // send a setup packet enabling 6 digits
-        if (!sent_SCN) begin
-          if (ready_reported) begin
-            word_out <= 16'b0000_1011_0000_0101; // address = scan limit, scan 6 digits
-            send_order <= 1;
-            sent_SCN <= 1;
-          end
-        end
-        else begin
-          send_order <= 0;
-          if (ready_reported) begin
             state <= SETUP_BCD;
           end
         end
-      end // SETUP_SCN
+      end // SETUP_LUX
 
       SETUP_BCD: begin // send a setup packet enabling BCD
         if (!sent_BCD) begin
           if (ready_reported) begin
-            word_out <= 16'b0000_1001_0011_1111; // address = decode mode, data = BCD for all
+            word_out <= 16'b0000_1001_0011_1111; // address = decode mode, data = BCD for digits 0-5
             send_order <= 1;
             sent_BCD <= 1;
           end
@@ -128,11 +129,26 @@ module SPI_driver (
         else begin
           send_order <= 0;
           if (ready_reported) begin
-            state <= IDLE;
+            state <= SETUP_PWR;
           end
         end
       end // SETUP_BCD
 
+      SETUP_PWR: begin // send a setup packet leaving shutdown mode
+        if (!sent_PWR) begin
+          if (ready_reported) begin
+            word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
+            send_order <= 1;
+            sent_PWR <= 1;
+          end
+        end else begin
+          send_order <= 0;
+          if (ready_reported) begin
+            state <= IDLE;
+          end
+        end
+      end // SETUP_PWR
+      
 
       IDLE: begin // wait for the 100Hz clock do initiate an update of all digits
         if (clk_div & ena) begin
@@ -205,17 +221,16 @@ module SPI_driver (
       end // TRANSFER
 
       WAIT: begin
-        if (wait_count == 4'b1111) begin
-          state <= DONE;
-          wait_count <= 4'b0;
-        end else if (ready_reported) begin
-          wait_count <= wait_count + 1'b1;
+        send_order <= 0; // STEP 1: pull order down again
+        if (wait_count == 4'b1111) begin // STEP 4: go back to transfer to send next packet
+          state <= TRANSFER;
+        end else if (ready_reported) begin // STEP 2: wait until SPI master is done
+          wait_count <= wait_count + 1'b1; // STEP 3: count up
         end
-      end
-
+      end // WAIT
 
       DONE: begin // wait for the 100 Hz clock to go low again
-        if (!clk_div) begin
+        if (!clk_div && ready_reported) begin
           state <= IDLE;
         end
       end // DONE
@@ -227,7 +242,7 @@ module SPI_driver (
   SPI_Master SPI_Master1 (
     .clk(clk),
     .res(reset_master),
-    .send_order(order_send),
+    .send_order(send_order),
     .word_in(word_out),
 
     .cs(Cs),
