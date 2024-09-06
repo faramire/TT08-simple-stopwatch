@@ -5,11 +5,9 @@
 This is a verilog stopwatch to be realised in a "rideshare" open source ASIC organised by Tiny Tapeout.
 I made a very similar stopwatch as part of an assignment in an FPGA class in VHDL, and wanted to learn verilog and ASIC design by porting it over.
 
-With 3 buttons, a stopwatch with 1/100th second precision can be started and stopped, as well as a lap time kept temporarily.
+With 3 buttons, a stopwatch with 1/100th second resolution can be started and stopped, as well as a lap time kept temporarily.
 
 For more, read the [Tiny Tapeout documentation](docs/info.md)
-
-[SPI Master courtesty of Russell Merrick aka nandland](https://github.com/nandland/spi-master).
 
 ## How to use
 
